@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import wget
 import json
 from telegram.ext import CommandHandler, MessageHandler, Filters, Updater
 from telegram import ParseMode
@@ -20,6 +20,11 @@ from plugins.dpbox import DPBOX
 from plugins.wdl import wget_dl
 import re
 from mega import Mega
+
+
+from urllib.request import urlopen
+
+
 
 gauth = GoogleAuth()
 
@@ -91,7 +96,7 @@ def token(update, context):
             print("Auth Error :", e)
             context.bot.send_message(chat_id=update.message.chat_id,
                                      text=TEXT.AUTH_ERROR)
-   
+
 
 # command `Start`
 @run_async
@@ -130,11 +135,11 @@ def UPLOAD(update, context):
 
         # I will Add This Later
         if "openload" in url or "oload" in url:
-            
+
             DownloadStatus = False
             sent_message.edit_text("Openload No longer avalible")
             return
-        
+
             # Here is DropBox Stuffs
         elif 'dropbox.com' in url:
 
@@ -166,37 +171,47 @@ def UPLOAD(update, context):
 
         else:
             try:
-                filename = url.split("/")[-1]
 
-                print("Downloading Started : {}".format(url.split("/")[-1]))
+
+
+                #START - TAMBAHAN UNTUK FILE NAME TIDAK TERDETEKSI PAKAI WGET CONTENT-DISPOSITION
+                #URL = str(input("url = "))
+                remotefile = urlopen(url)
+
+                '''
+                filename1 = remotefile.info()['Content-Disposition']
+                print(filename1)
+                filename2 = remotefile.headers['Content-Disposition']
+                print(filename2)
+                '''
+                try:
+                    filename3 = remotefile.info()['Content-Disposition'].split('filename=')[1]
+                    if filename3[0] == '"' or filename3[0] == "'":
+                        filename3 = filename3[1:-1]
+                    #print(filename3)
+                    filename = filename3
+                except Exception as e:
+                    filename = url.split("/")[-1]
+                #END - TAMBAHAN UNTUK FILE NAME TIDAK TERDETEKSI PAKAI WGET CONTENT-DISPOSITION
+
+                #filename = url.split("/")[-1]
+
+                print("Downloading Started : {}".format(filename))
                 sent_message.edit_text(TEXT.DOWNLOAD)
-                # filename = wget.download(url)
-                filename = wget_dl(str(url))
+                filename = wget.download(url)
+                #filename = wget_dl(str(url))
                 print("Downloading Complete : {}".format(filename))
                 sent_message.edit_text(TEXT.DOWN_COMPLETE)
                 DownloadStatus = True
 
-            except Exception as e:
-                # switch To second download(SmartDl Downloader) `You can activate it throungh TEXT file`
-                if TEXT.DOWN_TWO:
-                    print(TEXT.DOWN_TWO)
-                    try:
-                        sent_message.edit_text(
-                            "Downloader 1 Error:{} \n\n Downloader 2 :Downloading Started...".format(e))
 
-                        obj = SmartDL(url)
-                        obj.start()
-                        filename = obj.get_dest()
-                        DownloadStatus = True
-                    except Exception as e:
-                        print(e)
-                        sent_message.edit_text(
-                            "Downloading error :{}".format(e))
-                        DownloadStatus = False
-                else:
-                    print(e)
-                    sent_message.edit_text("Downloading error :{}".format(e))
-                    DownloadStatus = False
+            except Exception as e:
+
+                print(e)
+                sent_message.edit_text("Downloading error :{}".format(e))
+                DownloadStatus = False
+
+
 
             # Checking Error Filename
         if "error" in filename:
