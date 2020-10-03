@@ -10,9 +10,7 @@ from upload import upload
 from creds import Creds
 from pySmartDL import SmartDL
 from pydrive.auth import GoogleAuth
-
 from plugins import TEXT
-
 from plugins.tok_rec import is_token
 from time import time
 import subprocess
@@ -20,10 +18,11 @@ from plugins.dpbox import DPBOX
 from plugins.wdl import wget_dl
 import re
 from mega import Mega
-
-
 from urllib.request import urlopen
 
+###########################################################
+print("Strat...")
+###########################################################
 
 
 gauth = GoogleAuth()
